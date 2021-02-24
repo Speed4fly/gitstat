@@ -16,14 +16,14 @@ date = {}
 
 
 @click.command()
-@click.option("--target_dir", default='.', help='Folder to scan')
-@click.option("--start_time", default=str(datetime.date.today() + datetime.timedelta(days=-365)),
+@click.option("--target_dir", "-t", default='.', help='Folder to scan')
+@click.option("--start_time", "-s", default=str(datetime.date.today() + datetime.timedelta(days=-365)),
               help='Date to end analyse, yyyy-mm-dd')
-@click.option("--end_time",
+@click.option("--end_time", "-e",
               default=str(datetime.date.today()),
               help='Date to start analyse, yyyy-mm-dd',
               )
-@click.option("--author",
+@click.option("--author", "-a",
               default=git('config', 'user.email'),
               help='Email of git',
               )
@@ -45,10 +45,10 @@ def cli(target_dir, start_time, end_time, author):
         # click.echo(res)
         # print(res)
         insertions = re.findall(r'[0-9]+? insertions', res)
-        print(res)
+        # print(res)
         date_raw = re.findall(r'Date:   [A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}', res)
         # Date:   Wed Jan 6 10:22:28 2021 +0800
-        print(date_raw)
+        # print(date_raw)
         for date_raw_single in date_raw:
             date_stat(date, date_raw_single)
 
