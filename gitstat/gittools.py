@@ -91,14 +91,14 @@ def cli(target_dir, start_time, end_time, author):
         for r in deletions:
             i = re.findall(r'[0-9]+', r)
             count_d += int(i[0])
-        if count_i != 0 or count_d != 0:
-            temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', date_raw[0])
+        for item in date_raw:
+            temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', item)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
             date_stat(date, tmp_date)
             # result[item] = [count_i, count_d, tmp_date]
             # choices_dir.append(target_dir)
-            table.add_row(item, head, str(count_i), str(count_d),
-                          '[cyan]' + str(count_i + count_d) + '[/cyan]', style='bold')
+        table.add_row(item, head, str(count_i), str(count_d),
+                      '[cyan]' + str(count_i + count_d) + '[/cyan]', style='bold')
         count = count + count_i + count_d
         sum_i += count_i
         sum_d += count_d
@@ -107,7 +107,7 @@ def cli(target_dir, start_time, end_time, author):
         console.print("找不到有提交的仓库.", style="bold yellow")
         return 0
 
-    # print(type(answers))
+    # print(date)
     # i += result[item][0]
     # d += result[item][1]
     table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), '[red]' + str(sum_i + sum_d) + '[/red]', style='cyan')
