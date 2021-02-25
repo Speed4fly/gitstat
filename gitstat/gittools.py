@@ -68,7 +68,7 @@ def cli(target_dir, start_time, end_time, author):
 
         count_i = 0
         count_d = 0
-        head = git('symbolic-ref', '--short', '-q', 'HEAD').strip()
+        head = git('-C', item, 'symbolic-ref', '--short', '-q', 'HEAD').strip()
         res = git('-C', item, 'log', head, '--shortstat', '--author', author.strip(), '--since=' + start_time,
                   '--until=' + end_time)
         # 37 insertions(+), 90 deletions(-)
