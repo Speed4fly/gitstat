@@ -3,6 +3,7 @@
 
 import os
 import subprocess
+from rich.progress import track
 
 __all__ = ['scan', 'git', 'date_stat', ]
 
@@ -10,7 +11,7 @@ __all__ = ['scan', 'git', 'date_stat', ]
 def scan(target='.'):
     # flag = 1
     target_dirs = []
-    for dirs in os.walk(target):
+    for dirs in track(os.walk(target), total=sum(1 for _ in os.walk(target))):
         for dir_names in dirs[1:]:
             for dir_name in dir_names:
                 flag = 0
