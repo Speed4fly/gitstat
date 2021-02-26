@@ -117,9 +117,10 @@ def cli(target_dir, start_time, end_time, author, ext_names):
         insertions = []
         deletions = []
         insertions_and_deletions = re.findall(r'[0-9]+?\t[0-9]+?\t(?!\+).+?\.+?.+?\n', res)
-        print(insertions_and_deletions)
+        # print(insertions_and_deletions)
         for strings in insertions_and_deletions:
             if commit_is_code(strings, pattern[:-1] + ')\n'):
+            # if 1:
                 str_tmp = re.findall(r'[0-9]+?\t', strings)
                 insertions.append(int(str_tmp[0][:-1]))
                 deletions.append(int(str_tmp[1][:-1]))

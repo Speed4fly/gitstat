@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 
 this_directory = this_directory = path.abspath(path.dirname(__file__))
@@ -6,8 +6,8 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name='gitstat',
-    version='0.3.1',
-    scripts=['gitstat/gittools.py', ],
+    version='0.3.9',
+    packages=find_packages(),
     install_requires=['Click',
                       'PyInquirer',
                       'rich',
