@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='gitstat',
-    version='0.2.7',
+    version='0.2.8',
     scripts=['gitstat/gittools.py',],
     install_requires=['Click',
                       'PyInquirer',
