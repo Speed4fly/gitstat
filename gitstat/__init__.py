@@ -3,9 +3,10 @@
 
 import os
 import subprocess
+import re
 from rich.progress import track
 
-__all__ = ['scan', 'git', 'date_stat', ]
+__all__ = ['scan', 'git', 'date_stat', 'commit_is_code', ]
 
 
 def scan(target='.'):
@@ -42,3 +43,9 @@ def date_stat(date, date_raw_single):
         date[date_raw_single] = 1
     else:
         date[date_raw_single] += 1
+
+
+def commit_is_code(commit, pattern):
+    if re.search(pattern, commit, flags=re.IGNORECASE) is not None:
+        return True
+    return False

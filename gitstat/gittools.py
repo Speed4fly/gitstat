@@ -2,13 +2,12 @@
 
 import datetime
 import re
-import time
 
 import click
 from PyInquirer import prompt
 from rich.console import Console
 from rich.progress import track
-from rich.table import Table, Column
+from rich.table import Table
 
 from . import *
 
@@ -16,27 +15,67 @@ console = Console()
 result = {}
 choices_dir = []
 date = {}
+codes = ['.vue',  # Vue
+         '.py',  # Python
+         '.c',  # C family
+         '.h',
+         '.cpp',
+         '.hpp',
+         '.cc',
+         '.cs',
+         '.hxx',
+         '.cxx',
+         '.c\+\+',
+         '.m',
+         '.mm',
+         '.coffee',  # CoffeeScript
+         '.css',  # css
+         '.html',  # html
+         '.htm',
+         '.dart',  # Dart
+         '.dm',  # DM
+         '.ex',  # Elixir
+         '.exs',
+         '.go',  # Go
+         '.groovy',  # Groovy
+         '.java',  # Java
+         '.js',  # JavaScript
+         '.kt',  # Kotlin
+         '.pl',  # Perl
+         '.php',  # PHP
+         '.ps',  # PowerShell
+         '.rb',  # Ruby
+         '.rs',  # Rust
+         '.scala',  # Scala
+         '.sh',  # Shell
+         '.swift',  # Swift
+         '.ts',  # Type Script
+         ]
 
 
 @click.command()
-@click.option("--target_dir", "-t", default='.', help='Folder to scan')
+@click.option("--ext_names", "-f", default='', multiple=True, help='特殊的源代码文件扩展名,例如 .xxx ')
+@click.option("--target_dir", "-t", default='.', help='要扫描的路径')
 @click.option("--start_time", "-s", default=str(datetime.date.today() + datetime.timedelta(days=-365)),
-              help='Date to end analyse, yyyy-mm-dd')
+              help='结束统计的日期, yyyy-mm-dd')
 @click.option("--end_time", "-e",
               default=str(datetime.date.today()),
-              help='Date to start analyse, yyyy-mm-dd',
+              help='开始统计的日期, yyyy-mm-dd',
               )
 @click.option("--author", "-a",
-              default=git('config', 'user.email'),
+              default=git('config', 'user.email')[:-1],
               help='Email of git',
               )
 # @click.option("--author",  help = 'Email of git', required=True)
 # @click.option
 
-def cli(target_dir, start_time, end_time, author):
+def cli(target_dir, start_time, end_time, author, ext_names):
     target_dirs = scan(target_dir)
-    # console.print('User : ', author, style="bold red")
-    # print(target_dirs)
+    pattern = '.('
+    for code in codes:
+        pattern += code[1:] + '|'
+    for ext_name in ext_names:
+        pattern += ext_name[1:] + '|'
     count = 0
     choices = []
     for item in target_dirs:
@@ -68,16 +107,23 @@ def cli(target_dir, start_time, end_time, author):
 
         count_i = 0
         count_d = 0
-        head = git('-C', item, 'symbolic-ref', '--short', '-q', 'HEAD').strip()
-        res = git('-C', item, 'log', head, '--shortstat', '--author', author.strip(), '--since=' + start_time,
+        head = git('-C', item, 'symbolic-ref', '--short', '-q', 'HEAD')[:-1]
+        res = git('-C', item, 'log', head, '--numstat', '--author', author, '--since=' + start_time,
                   '--until=' + end_time)
         # 37 insertions(+), 90 deletions(-)
         # [0-9]+? insertions [0-9]+? deletions
         # click.echo(res)
-        # print(res)
-
-        insertions = re.findall(r'[0-9]+? insertions', res)
-        date_raw = re.findall(r'Date:   [A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
+        # print(res, type(res))
+        insertions = []
+        deletions = []
+        insertions_and_deletions = re.findall(r'[0-9]+?\t[0-9]+?\t(?!\+).+?\.+?.+?\n', res)
+        print(insertions_and_deletions)
+        for strings in insertions_and_deletions:
+            if commit_is_code(strings, pattern[:-1] + ')\n'):
+                str_tmp = re.findall(r'[0-9]+?\t', strings)
+                insertions.append(int(str_tmp[0][:-1]))
+                deletions.append(int(str_tmp[1][:-1]))
+        date_raw = re.findall(r'Date: {3}[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
                               res)
         # Date:   Wed Jan 6 10:22:28 2021 +0800
         # print(date_raw)
@@ -85,12 +131,10 @@ def cli(target_dir, start_time, end_time, author):
         #     date_stat(date, date_raw_single)
 
         for r in insertions:
-            i = re.findall(r'[0-9]+', r)
-            count_i += int(i[0])
-        deletions = re.findall(r'[0-9]+? deletions', res)
+            # print(r)
+            count_i += r
         for r in deletions:
-            i = re.findall(r'[0-9]+', r)
-            count_d += int(i[0])
+            count_d += r
         for i in date_raw:
             temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', i)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
@@ -104,7 +148,7 @@ def cli(target_dir, start_time, end_time, author):
         sum_d += count_d
 
     if count == 0:
-        console.print("找不到有提交的仓库.", style="bold yellow")
+        console.print("找不到有提交的仓库.", style="bold red")
         return 0
 
     # print(date)
