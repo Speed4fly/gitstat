@@ -1,14 +1,18 @@
 from setuptools import setup
+from os import path
 
+this_directory = this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 setup(
     name='gitstat',
-    version='0.3.0',
-    scripts=['gitstat/gittools.py',],
+    version='0.3.1',
+    scripts=['gitstat/gittools.py', ],
     install_requires=['Click',
                       'PyInquirer',
                       'rich',
                       ],
-    long_description='README.md',
+    long_description=long_description,
     long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': ['gitstat=gitstat.gittools:cli']
