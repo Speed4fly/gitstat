@@ -83,6 +83,9 @@ def cli(target_dir, start_time, end_time, author, ext_names):
 
     count = 0
     choices = []
+    if target_dirs==[]:
+        print("路径内无仓库.")
+        return 0
     for item in target_dirs:
         choices.append({'name': item})
     questions = [
