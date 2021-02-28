@@ -120,7 +120,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
         # print(insertions_and_deletions)
         for strings in insertions_and_deletions:
             if commit_is_code(strings, pattern[:-1] + ')\n'):
-            # if 1:
+                # if 1:
                 str_tmp = re.findall(r'[0-9]+?\t', strings)
                 insertions.append(int(str_tmp[0][:-1]))
                 deletions.append(int(str_tmp[1][:-1]))
@@ -155,7 +155,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
     # print(date)
     # i += result[item][0]
     # d += result[item][1]
-    table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), '[red]' + str(sum_i + sum_d) + '[/red]', style='cyan')
+    table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), str(sum_i + sum_d), style='cyan')
     console.print("\n自 ", start_time, " 至 ", end_time, " : ", style="bold yellow")
     console.print('账户:', author, style="bold red")
     console.print(table)
