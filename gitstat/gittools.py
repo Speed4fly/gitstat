@@ -15,42 +15,43 @@ console = Console()
 result = {}
 choices_dir = []
 date = {}
-codes = ['.vue',  # Vue
-         '.py',  # Python
-         '.c',  # C family
-         '.h',
-         '.cpp',
-         '.hpp',
-         '.cc',
-         '.cs',
-         '.hxx',
-         '.cxx',
-         '.c\+\+',
-         '.m',
-         '.mm',
-         '.coffee',  # CoffeeScript
-         '.css',  # css
-         '.html',  # html
-         '.htm',
-         '.dart',  # Dart
-         '.dm',  # DM
-         '.ex',  # Elixir
-         '.exs',
-         '.go',  # Go
-         '.groovy',  # Groovy
-         '.java',  # Java
-         '.js',  # JavaScript
-         '.kt',  # Kotlin
-         '.pl',  # Perl
-         '.php',  # PHP
-         '.ps',  # PowerShell
-         '.rb',  # Ruby
-         '.rs',  # Rust
-         '.scala',  # Scala
-         '.sh',  # Shell
-         '.swift',  # Swift
-         '.ts',  # Type Script
-         ]
+codes = {
+    'Vue': ['.vue', ],  # Vue
+    'Python': ['.py', ],  # Python
+    'C family': ['.c',  # C family
+                 '.h',
+                 '.cpp',
+                 '.hpp',
+                 '.cc',
+                 '.cs',
+                 '.hxx',
+                 '.cxx',
+                 '.c\+\+',
+                 '.m',
+                 '.mm', ],
+    'CoffeeScript': ['.coffee', ],  # CoffeeScript
+    'CSS': ['.css', ],  # css
+    'Html': ['.html',  # html
+             '.htm', ],
+    'Dart': ['.dart', ],  # Dart
+    'DM': ['.dm', ],  # DM
+    'Elixir': ['.ex',  # Elixir
+               '.exs', ],
+    'Go': ['.go', ],  # Go
+    'Groovy': ['.groovy', ],  # Groovy
+    'Java': ['.java', ],  # Java
+    'JavaScript': ['.js', ],  # JavaScript
+    'Kotlin': ['.kt', ],  # Kotlin
+    'Perl': ['.pl', ],  # Perl
+    'PHP': ['.php', ],  # PHP
+    'PowerShell': ['.ps', ],  # PowerShell
+    'Ruby': ['.rb', ],  # Ruby
+    'Rust': ['.rs', ],  # Rust
+    'Scala': ['.scala', ],  # Scala
+    'Shell': ['.sh', ],  # Shell
+    'Swift': ['.swift', ],  # Swift
+    'TypeScript': ['.ts', ],  # TypeScript
+}
 
 
 @click.command()
@@ -70,12 +71,16 @@ codes = ['.vue',  # Vue
 # @click.option
 
 def cli(target_dir, start_time, end_time, author, ext_names):
+    if ext_names != ():
+        codes['Custom'] = ext_names
     target_dirs = scan(target_dir)
-    pattern = '.('
-    for code in codes:
-        pattern += code[1:] + '|'
-    for ext_name in ext_names:
-        pattern += ext_name[1:] + '|'
+    patterns = {}
+    for code_name, code_list in codes.items():
+        pattern = '.('
+        for code in code_list:
+            pattern += code[1:] + '|'
+        patterns[code_name] = pattern[:-1] + ')\n'
+
     count = 0
     choices = []
     for item in target_dirs:
@@ -103,64 +108,66 @@ def cli(target_dir, start_time, end_time, author, ext_names):
     table.add_column("移除", justify="right")
     table.add_column("共计", justify="right")
 
-    for item in track(answers['Repositories']):
+    table_code = Table(show_header=True, header_style="bold green")
+    table_code.add_column("语言")
+    table_code.add_column("新增", justify="right")
+    table_code.add_column("移除", justify="right")
+    table_code.add_column("共计", justify="right")
 
+    for item in track(answers['Repositories']):
+        result[item] = {}
         count_i = 0
         count_d = 0
         head = git('-C', item, 'symbolic-ref', '--short', '-q', 'HEAD')[:-1]
         res = git('-C', item, 'log', head, '--numstat', '--author', author, '--since=' + start_time,
                   '--until=' + end_time)
-        # 37 insertions(+), 90 deletions(-)
-        # [0-9]+? insertions [0-9]+? deletions
-        # click.echo(res)
-        # print(res, type(res))
-        insertions = []
-        deletions = []
+
         insertions_and_deletions = re.findall(r'[0-9]+?\t[0-9]+?\t(?!\+).+?\.+?.+?\n', res)
-        # print(insertions_and_deletions)
-        for strings in insertions_and_deletions:
-            if commit_is_code(strings, pattern[:-1] + ')\n'):
-                # if 1:
-                str_tmp = re.findall(r'[0-9]+?\t', strings)
-                insertions.append(int(str_tmp[0][:-1]))
-                deletions.append(int(str_tmp[1][:-1]))
+
+        for code_name in codes.keys():
+            result[item][code_name] = [0, 0]
+
+        for strings in insertions_and_deletions[:]:
+            for code_name in codes.keys():
+                if commit_is_code(strings, patterns[code_name]):
+                    str_tmp = re.findall(r'[0-9]+?\t', strings)
+                    result[item][code_name][0] += int(str_tmp[0][:-1])
+                    result[item][code_name][1] += int(str_tmp[1][:-1])
+                    insertions_and_deletions.remove(strings)
+
         date_raw = re.findall(r'Date: {3}[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
                               res)
-        # Date:   Wed Jan 6 10:22:28 2021 +0800
-        # print(date_raw)
-        # for date_raw_single in date_raw:
-        #     date_stat(date, date_raw_single)
-
-        for r in insertions:
-            # print(r)
-            count_i += r
-        for r in deletions:
-            count_d += r
         for i in date_raw:
             temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', i)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
             date_stat(date, tmp_date)
-            # result[item] = [count_i, count_d, tmp_date]
-            # choices_dir.append(target_dir)
-        table.add_row(item, head, str(count_i), str(count_d),
-                      '[cyan]' + str(count_i + count_d) + '[/cyan]', style='bold')
-        count = count + count_i + count_d
-        sum_i += count_i
-        sum_d += count_d
 
-    if count == 0:
-        console.print("找不到有提交的仓库.", style="bold red")
-        return 0
+        for values in result[item].values():
+            count_i += values[0]
+            count_d += values[1]
+        if (count_i + count_d) != 0:
+            table.add_row(item, head, str(count_i), str(count_d),
+                          '[cyan][bold]' + str(count_i + count_d) + '[/bold][/cyan]')
+            count = count + count_i + count_d
+            sum_i += count_i
+            sum_d += count_d
 
-    # print(date)
-    # i += result[item][0]
-    # d += result[item][1]
-    table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), str(sum_i + sum_d), style='cyan')
-    console.print("\n自 ", start_time, " 至 ", end_time, " : ", style="bold yellow")
+    count_code = {}
+    for code_name in codes:
+        count_code[code_name] = [0, 0]
+        for item in answers['Repositories']:
+            count_code[code_name][0] += result[item][code_name][0]
+            count_code[code_name][1] += result[item][code_name][1]
+        if (count_code[code_name][0] + count_code[code_name][1] != 0) | (code_name == 'Custom'):
+            table_code.add_row(code_name, str(count_code[code_name][0]), str(count_code[code_name][1]),
+                               '[bold]' + str(count_code[code_name][0] + count_code[code_name][1]) + '[/bold]')
+
+    table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), str(sum_i + sum_d), style='bold cyan')
+    console.print("\n自", start_time, "至", end_time, ":", style="bold")
     console.print('账户:', author, style="bold red")
     console.print(table)
+    console.print(table_code)
 
-    # for item in answers[Repositories]:
     max_value = 0
     busy_day = 0
     for key, value in date.items():

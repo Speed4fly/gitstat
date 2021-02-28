@@ -6,7 +6,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name='gitstat',
-    version='0.3.9',
+    version='0.4.0',
     packages=find_packages(),
     install_requires=['Click',
                       'PyInquirer',
