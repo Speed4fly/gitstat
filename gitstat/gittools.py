@@ -146,7 +146,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', i)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
             date_stat(date, tmp_date)
-            date_flagflag = 1
+            date_flag = 1
 
         for values in result[item].values():
             count_i += values[0]
