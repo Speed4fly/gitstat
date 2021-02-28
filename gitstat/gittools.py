@@ -71,6 +71,8 @@ codes = {
 # @click.option
 
 def cli(target_dir, start_time, end_time, author, ext_names):
+    date_flag = 0
+    table_flag = 0
     if ext_names != ():
         codes['Custom'] = ext_names
     target_dirs = scan(target_dir)
@@ -83,7 +85,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
 
     count = 0
     choices = []
-    if target_dirs==[]:
+    if not target_dirs:
         print("路径内无仓库.")
         return 0
     for item in target_dirs:
@@ -144,6 +146,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', i)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
             date_stat(date, tmp_date)
+            date_flagflag = 1
 
         for values in result[item].values():
             count_i += values[0]
@@ -154,6 +157,7 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             count = count + count_i + count_d
             sum_i += count_i
             sum_d += count_d
+            table_flag = 1
 
     count_code = {}
     for code_name in codes:
@@ -168,13 +172,18 @@ def cli(target_dir, start_time, end_time, author, ext_names):
     table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), str(sum_i + sum_d), style='bold cyan')
     console.print("\n自", start_time, "至", end_time, ":", style="bold")
     console.print('账户:', author, style="bold red")
-    console.print(table)
-    console.print(table_code)
+    if table_flag:
+        console.print(table)
+        console.print(table_code)
+    else:
+        print("所选仓库中无代码提交.")
+        return 0
 
-    max_value = 0
-    busy_day = 0
-    for key, value in date.items():
-        if value > max_value:
-            max_value = value
-            busy_day = key
-    console.print("\n在 ", busy_day, '这一天,你提交了 ', date[busy_day], ' 次. ', style="bold white")
+    if date_flag:
+        max_value = 0
+        busy_day = 0
+        for key, value in date.items():
+            if value > max_value:
+                max_value = value
+                busy_day = key
+        console.print("\n在 ", busy_day, '这一天,你提交了 ', date[busy_day], ' 次. ', style="bold white")
