@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/python
 
 import datetime
 import re
@@ -16,64 +16,120 @@ result = {}
 choices_dir = []
 date = {}
 codes = {
-    'Vue': ['.vue', ],  # Vue
-    'Python': ['.py', ],  # Python
-    'C family': ['.c',  # C family
-                 '.h',
-                 '.cpp',
-                 '.hpp',
-                 '.cc',
-                 '.cs',
-                 '.hxx',
-                 '.cxx',
-                 '.c\+\+',
-                 '.m',
-                 '.mm', ],
-    'CoffeeScript': ['.coffee', ],  # CoffeeScript
-    'CSS': ['.css', ],  # css
-    'Html': ['.html',  # html
-             '.htm', ],
-    'Dart': ['.dart', ],  # Dart
-    'DM': ['.dm', ],  # DM
-    'Elixir': ['.ex',  # Elixir
-               '.exs', ],
-    'Go': ['.go', ],  # Go
-    'Groovy': ['.groovy', ],  # Groovy
-    'Java': ['.java', ],  # Java
-    'JavaScript': ['.js', ],  # JavaScript
-    'Kotlin': ['.kt', ],  # Kotlin
-    'Perl': ['.pl', ],  # Perl
-    'PHP': ['.php', ],  # PHP
-    'PowerShell': ['.ps', ],  # PowerShell
-    'Ruby': ['.rb', ],  # Ruby
-    'Rust': ['.rs', ],  # Rust
-    'Scala': ['.scala', ],  # Scala
-    'Shell': ['.sh', ],  # Shell
-    'Swift': ['.swift', ],  # Swift
-    'TypeScript': ['.ts', ],  # TypeScript
+    'Vue': [
+        '.vue',
+    ],  # Vue
+    'Python': [
+        '.py',
+    ],  # Python
+    'C family': [
+        '.c',  # C family
+        '.h',
+        '.cpp',
+        '.hpp',
+        '.cc',
+        '.cs',
+        '.hxx',
+        '.cxx',
+        '.c\+\+',
+        '.m',
+        '.mm',
+    ],
+    'CoffeeScript': [
+        '.coffee',
+    ],  # CoffeeScript
+    'CSS': [
+        '.css',
+    ],  # css
+    'Html': [
+        '.html',  # html
+        '.htm',
+    ],
+    'Dart': [
+        '.dart',
+    ],  # Dart
+    'DM': [
+        '.dm',
+    ],  # DM
+    'Elixir': [
+        '.ex',  # Elixir
+        '.exs',
+    ],
+    'Go': [
+        '.go',
+    ],  # Go
+    'Groovy': [
+        '.groovy',
+    ],  # Groovy
+    'Java': [
+        '.java',
+    ],  # Java
+    'JavaScript': [
+        '.js',
+    ],  # JavaScript
+    'Kotlin': [
+        '.kt',
+    ],  # Kotlin
+    'Perl': [
+        '.pl',
+    ],  # Perl
+    'PHP': [
+        '.php',
+    ],  # PHP
+    'PowerShell': [
+        '.ps',
+    ],  # PowerShell
+    'Ruby': [
+        '.rb',
+    ],  # Ruby
+    'Rust': [
+        '.rs',
+    ],  # Rust
+    'Scala': [
+        '.scala',
+    ],  # Scala
+    'Shell': [
+        '.sh',
+    ],  # Shell
+    'Swift': [
+        '.swift',
+    ],  # Swift
+    'TypeScript': [
+        '.ts',
+    ],  # TypeScript
 }
 
 
 @click.command()
-@click.option("--ext_names", "-f", default='', multiple=True, help='特殊的源代码文件扩展名,例如 .xxx ')
+@click.option("--ext_names",
+              "-f",
+              default=None,
+              multiple=False,
+              help='特殊的源代码文件扩展名,例如 .xxx ')
 @click.option("--target_dir", "-t", default='.', help='要扫描的路径')
-@click.option("--start_time", "-s", default=str(datetime.date.today() + datetime.timedelta(days=-365)),
+@click.option("--start_time",
+              "-s",
+              default=str(datetime.date.today() +
+                          datetime.timedelta(days=-365)),
               help='结束统计的日期, yyyy-mm-dd')
-@click.option("--end_time", "-e",
-              default=str(datetime.date.today()),
-              help='开始统计的日期, yyyy-mm-dd',
-              )
-@click.option("--author", "-a",
-              default=git('config', 'user.email')[:-1],
-              help='Email of git',
-              )
+@click.option(
+    "--end_time",
+    "-e",
+    default=str(datetime.date.today()),
+    help='开始统计的日期, yyyy-mm-dd',
+)
+@click.option(
+    "--author",
+    "-a",
+    default=git('config', 'user.email')[:-1],
+    help='Email of git',
+)
 # @click.option("--author",  help = 'Email of git', required=True)
 # @click.option
-
 def cli(target_dir, start_time, end_time, author, ext_names):
     date_flag = 0
     table_flag = 0
-    if ext_names != ():
+    if ext_names:
         codes['Custom'] = ext_names
     target_dirs = scan(target_dir)
     patterns = {}
@@ -124,10 +180,11 @@ def cli(target_dir, start_time, end_time, author, ext_names):
         count_i = 0
         count_d = 0
         head = git('-C', item, 'symbolic-ref', '--short', '-q', 'HEAD')[:-1]
-        res = git('-C', item, 'log', head, '--numstat', '--author', author, '--since=' + start_time,
-                  '--until=' + end_time)
+        res = git('-C', item, 'log', head, '--numstat', '--author', author,
+                  '--since=' + start_time, '--until=' + end_time)
 
-        insertions_and_deletions = re.findall(r'[0-9]+?\t[0-9]+?\t(?!\+).+?\.+?.+?\n', res)
+        insertions_and_deletions = re.findall(
+            r'[0-9]+?\t[0-9]+?\t(?!\+).+?\.+?.+?\n', res)
 
         for code_name in codes.keys():
             result[item][code_name] = [0, 0]
@@ -140,8 +197,9 @@ def cli(target_dir, start_time, end_time, author, ext_names):
                     result[item][code_name][1] += int(str_tmp[1][:-1])
                     insertions_and_deletions.remove(strings)
 
-        date_raw = re.findall(r'Date: {3}[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
-                              res)
+        date_raw = re.findall(
+            r'Date: {3}[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
+            res)
         for i in date_raw:
             temp_str_list = re.split(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', i)
             tmp_date = temp_str_list[0][7:] + temp_str_list[1]
@@ -152,8 +210,9 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             count_i += values[0]
             count_d += values[1]
         if (count_i + count_d) != 0:
-            table.add_row(item, head, str(count_i), str(count_d),
-                          '[cyan][bold]' + str(count_i + count_d) + '[/bold][/cyan]')
+            table.add_row(
+                item, head, str(count_i), str(count_d),
+                '[cyan][bold]' + str(count_i + count_d) + '[/bold][/cyan]')
             count = count + count_i + count_d
             sum_i += count_i
             sum_d += count_d
@@ -165,11 +224,20 @@ def cli(target_dir, start_time, end_time, author, ext_names):
         for item in answers['Repositories']:
             count_code[code_name][0] += result[item][code_name][0]
             count_code[code_name][1] += result[item][code_name][1]
-        if (count_code[code_name][0] + count_code[code_name][1] != 0) | (code_name == 'Custom'):
-            table_code.add_row(code_name, str(count_code[code_name][0]), str(count_code[code_name][1]),
-                               '[bold]' + str(count_code[code_name][0] + count_code[code_name][1]) + '[/bold]')
+        if (count_code[code_name][0] + count_code[code_name][1] !=
+                0) | (code_name == 'Custom'):
+            table_code.add_row(
+                code_name, str(count_code[code_name][0]),
+                str(count_code[code_name][1]), '[bold]' +
+                str(count_code[code_name][0] + count_code[code_name][1]) +
+                '[/bold]')
 
-    table.add_row("[red]总计[/red]", '/', str(sum_i), str(sum_d), str(sum_i + sum_d), style='bold cyan')
+    table.add_row("[red]总计[/red]",
+                  '/',
+                  str(sum_i),
+                  str(sum_d),
+                  str(sum_i + sum_d),
+                  style='bold cyan')
     console.print("\n自", start_time, "至", end_time, ":", style="bold")
     console.print('账户:', author, style="bold red")
     if table_flag:
@@ -186,4 +254,9 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             if value > max_value:
                 max_value = value
                 busy_day = key
-        console.print("\n在 ", busy_day, '这一天,你提交了 ', date[busy_day], ' 次. ', style="bold white")
+        console.print("\n在 ",
+                      busy_day,
+                      '这一天,你提交了 ',
+                      date[busy_day],
+                      ' 次. ',
+                      style="bold white")

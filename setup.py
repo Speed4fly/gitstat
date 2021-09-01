@@ -6,15 +6,14 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 setup(
     name='gitstat',
-    version='0.4.3',
+    version='0.4.4',
     packages=find_packages(),
-    install_requires=['Click',
-                      'PyInquirer',
-                      'rich',
-                      ],
+    install_requires=[
+        'Click',
+        'PyInquirer',
+        'rich',
+    ],
     long_description=long_description,
     long_description_content_type='text/markdown',
-    entry_points={
-        'console_scripts': ['gitstat=gitstat.gittools:cli']
-    },
+    entry_points={'console_scripts': ['gitstat=gitstat.gittools:cli']},
 )
