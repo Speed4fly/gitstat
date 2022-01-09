@@ -15,89 +15,6 @@ console = Console()
 result = {}
 choices_dir = []
 date = {}
-codes = {
-    'Vue': [
-        '.vue',
-    ],  # Vue
-    'Python': [
-        '.py',
-    ],  # Python
-    'C family': [
-        '.c',  # C family
-        '.h',
-        '.cpp',
-        '.hpp',
-        '.cc',
-        '.cs',
-        '.hxx',
-        '.cxx',
-        '.c\+\+',
-        '.m',
-        '.mm',
-    ],
-    'CoffeeScript': [
-        '.coffee',
-    ],  # CoffeeScript
-    'CSS': [
-        '.css',
-    ],  # css
-    'Html': [
-        '.html',  # html
-        '.htm',
-    ],
-    'Dart': [
-        '.dart',
-    ],  # Dart
-    'DM': [
-        '.dm',
-    ],  # DM
-    'Elixir': [
-        '.ex',  # Elixir
-        '.exs',
-    ],
-    'Go': [
-        '.go',
-    ],  # Go
-    'Groovy': [
-        '.groovy',
-    ],  # Groovy
-    'Java': [
-        '.java',
-    ],  # Java
-    'JavaScript': [
-        '.js',
-    ],  # JavaScript
-    'Kotlin': [
-        '.kt',
-    ],  # Kotlin
-    'Perl': [
-        '.pl',
-    ],  # Perl
-    'PHP': [
-        '.php',
-    ],  # PHP
-    'PowerShell': [
-        '.ps',
-    ],  # PowerShell
-    'Ruby': [
-        '.rb',
-    ],  # Ruby
-    'Rust': [
-        '.rs',
-    ],  # Rust
-    'Scala': [
-        '.scala',
-    ],  # Scala
-    'Shell': [
-        '.sh',
-    ],  # Shell
-    'Swift': [
-        '.swift',
-    ],  # Swift
-    'TypeScript': [
-        '.ts',
-    ],  # TypeScript
-}
 
 
 @click.command()
@@ -105,7 +22,7 @@ codes = {
               "-f",
               default=None,
               multiple=False,
-              help='特殊的源代码文件扩展名,例如 .xxx ')
+              help='特殊的源代码文件扩展名,不包含点号,例如 txt ')
 @click.option("--target_dir", "-t", default='.', help='要扫描的路径')
 @click.option("--start_time",
               "-s",
@@ -124,21 +41,20 @@ codes = {
     default=git('config', 'user.email')[:-1],
     help='Email of git',
 )
-# @click.option("--author",  help = 'Email of git', required=True)
-# @click.option
-def cli(target_dir, start_time, end_time, author, ext_names):
+@click.option(
+    "--mode",
+    "-m",
+    default="lazy",
+    help='搜索代码仓库的模式，默认为lazy模式（即仅搜索当前目录下一级），full模式会遍历所有子目录。'
+)
+def cli(target_dir, start_time, end_time, author, ext_names, mode):
     date_flag = 0
     table_flag = 0
-    if ext_names:
-        codes['Custom'] = ext_names
-    target_dirs = scan(target_dir)
-    patterns = {}
-    for code_name, code_list in codes.items():
-        pattern = '.('
-        for code in code_list:
-            pattern += code[1:] + '|'
-        patterns[code_name] = pattern[:-1] + ')\n'
-
+    if mode == 'full':
+        target_dirs = scan(target_dir)
+    else:
+        target_dirs = lazy_scan(target_dir)
+    codes, patterns = pattern(ext_names)
     count = 0
     choices = []
     if not target_dirs:
@@ -189,13 +105,13 @@ def cli(target_dir, start_time, end_time, author, ext_names):
         for code_name in codes.keys():
             result[item][code_name] = [0, 0]
 
-        for strings in insertions_and_deletions[:]:
+        for strings in insertions_and_deletions:
             for code_name in codes.keys():
                 if commit_is_code(strings, patterns[code_name]):
                     str_tmp = re.findall(r'[0-9]+?\t', strings)
                     result[item][code_name][0] += int(str_tmp[0][:-1])
                     result[item][code_name][1] += int(str_tmp[1][:-1])
-                    insertions_and_deletions.remove(strings)
+                    # insertions_and_deletions.remove(strings)
 
         date_raw = re.findall(
             r'Date: {3}[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+? [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}',
@@ -225,12 +141,12 @@ def cli(target_dir, start_time, end_time, author, ext_names):
             count_code[code_name][0] += result[item][code_name][0]
             count_code[code_name][1] += result[item][code_name][1]
         if (count_code[code_name][0] + count_code[code_name][1] !=
-                0) | (code_name == 'Custom'):
+            0) | (code_name == 'Custom'):
             table_code.add_row(
                 code_name, str(count_code[code_name][0]),
                 str(count_code[code_name][1]), '[bold]' +
-                str(count_code[code_name][0] + count_code[code_name][1]) +
-                '[/bold]')
+                                               str(count_code[code_name][0] + count_code[code_name][1]) +
+                                               '[/bold]')
 
     table.add_row("[red]总计[/red]",
                   '/',
